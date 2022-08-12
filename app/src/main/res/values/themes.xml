@@ -1,0 +1,14 @@
+<resources>
+    <!-- Base application theme. -->
+    <style name="Base.Theme.ZuiApp" parent="Theme.Material3.Light.NoActionBar">
+        <!-- Customize your light theme here. -->
+        <item name="colorPrimary">#6750a4</item>
+        <item name="colorOnPrimary">#ffffff</item>
+        <item name="android:textSize">14sp</item>
+        <item name="android:textAllCaps">false</item>
+    </style>
+
+    <style name="Theme.ZuiApp" parent="Base.Theme.ZuiApp">
+    </style>
+
+</resources>

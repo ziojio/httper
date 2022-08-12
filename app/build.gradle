@@ -1,0 +1,41 @@
+plugins {
+    id 'com.android.application'
+}
+
+android {
+    namespace 'com.demo'
+
+    compileSdk 31
+
+    defaultConfig {
+        applicationId 'com.ziojio.httper.app'
+        minSdk 21
+        targetSdk 31
+        versionCode = 1
+        versionName = "1.0"
+    }
+
+    buildFeatures {
+        viewBinding = true
+    }
+    buildTypes {
+        release {
+            shrinkResources false
+            minifyEnabled false
+            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
+        }
+    }
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_1_8
+        targetCompatibility JavaVersion.VERSION_1_8
+    }
+}
+
+dependencies {
+    implementation project(path: ':httper')
+
+    implementation "com.google.android.material:material:1.5.0"
+    implementation "androidx.appcompat:appcompat:1.4.2"
+}
+
+
