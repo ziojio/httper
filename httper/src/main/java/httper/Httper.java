@@ -31,6 +31,7 @@ public class Httper {
     Gson gson;
     OkHttpClient httpClient;
     RequestFilter requestFilter;
+    ResponseParser responseParser;
 
     Httper(Builder builder) {
         this.debug = builder.debug;
@@ -40,6 +41,7 @@ public class Httper {
         this.gson = builder.gson;
         this.httpClient = builder.httpClient;
         this.requestFilter = builder.requestFilter;
+        this.responseParser = builder.responseParser;
     }
 
     public GetRequest get() {
@@ -99,6 +101,7 @@ public class Httper {
         Gson gson;
         OkHttpClient httpClient;
         RequestFilter requestFilter;
+        ResponseParser responseParser;
 
         public Builder() {
             callbackExecutor = new MainExecutor();
@@ -165,6 +168,11 @@ public class Httper {
 
         public Builder setRequestFilter(RequestFilter requestFilter) {
             this.requestFilter = requestFilter;
+            return this;
+        }
+
+        public Builder setResponseParser(ResponseParser responseParser) {
+            this.responseParser = responseParser;
             return this;
         }
 

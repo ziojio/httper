@@ -47,7 +47,6 @@ abstract class HttpRequest<T extends HttpRequest<?>> {
     String tag;
     long timeout;
     HashMap<String, String> headers = new HashMap<>();
-    Type dataType;
 
     public HttpRequest(Httper httper) {
         debug = httper.isDebug();
@@ -94,11 +93,6 @@ abstract class HttpRequest<T extends HttpRequest<?>> {
         return (T) this;
     }
 
-    public T responseType(Type type) {
-        this.dataType = type;
-        return (T) this;
-    }
-
     String generateUrl() {
         String httpUrl;
         if (url == null || url.isBlank()) {
@@ -134,20 +128,20 @@ abstract class HttpRequest<T extends HttpRequest<?>> {
     }
 
     <R> Callback generateCallback(HttpCallback<R> callback) {
-        if (dataType == null) {
-            dataType = TypeUtil.getGenericInterfaceTypeParameter(callback);
-        }
+        Type dataType = TypeUtil.getGenericInterfaceTypeParameter(callback);
         return new Callback() {
             @Override
             public void onResponse(Call call, Response response) throws IOException {
                 final HttpResponse resp = HttpResponse.processResponse(response);
                 final String str = response.body().string();
                 resp.data = str;
-                if (response.isSuccessful() && !String.class.equals(dataType) && dataType != null) {
-                    try {
-                        resp.data = gson.fromJson(str, dataType);
-                    } catch (Exception e) {
-                        resp.error = new HttpResponse.Error(-102, e.getMessage());
+                if (response.isSuccessful()) {
+                    if (dataType != null && !String.class.equals(dataType)) {
+                        try {
+                            resp.data = gson.fromJson(str, dataType);
+                        } catch (Exception e) {
+                            resp.error = new HttpResponse.Error(-102, e.getMessage());
+                        }
                     }
                 }
                 onResult(resp);
