@@ -1,7 +1,5 @@
 package httper.request;
 
-import com.google.gson.Gson;
-
 import java.io.IOException;
 import java.lang.reflect.Type;
 import java.util.HashMap;
@@ -13,6 +11,7 @@ import java.util.concurrent.TimeUnit;
 import httper.HttpCallback;
 import httper.HttpResponse;
 import httper.Httper;
+import httper.Parser;
 import httper.RequestFilter;
 import httper.util.TypeUtil;
 import okhttp3.Call;
@@ -40,7 +39,6 @@ abstract class HttpRequest<T extends HttpRequest<?>> {
     final String baseUrl;
     final RequestFilter requestFilter;
     final Executor executor;
-    final Gson gson;
     final OkHttpClient httpClient;
 
     String url;
@@ -53,7 +51,6 @@ abstract class HttpRequest<T extends HttpRequest<?>> {
         baseUrl = httper.getBaseUrl();
         executor = httper.getCallbackExecutor();
         requestFilter = httper.getRequestFilter();
-        gson = httper.getGson();
         httpClient = httper.getHttpClient();
 
         if (httper.getHeaders() != null) {
@@ -138,7 +135,7 @@ abstract class HttpRequest<T extends HttpRequest<?>> {
                 if (response.isSuccessful()) {
                     if (dataType != null && !String.class.equals(dataType)) {
                         try {
-                            resp.data = gson.fromJson(str, dataType);
+                            resp.data = Parser.getParserFactory().fromJson(str, dataType);
                         } catch (Exception e) {
                             resp.error = new HttpResponse.Error(-102, e.getMessage());
                         }

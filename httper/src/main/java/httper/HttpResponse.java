@@ -9,7 +9,7 @@ import okhttp3.Response;
 
 public class HttpResponse<T> implements Serializable {
 
-    public int status;
+    public int code;
     public String message;
     public Map<String, String> header;
 
@@ -32,10 +32,10 @@ public class HttpResponse<T> implements Serializable {
                 resp.header.put(key, headers.get(key));
             }
         }
-        resp.status = response.code();
+        resp.code = response.code();
         resp.message = response.message();
         if (!response.isSuccessful()) {
-            resp.error = new HttpResponse.Error(resp.status, resp.message);
+            resp.error = new HttpResponse.Error(resp.code, resp.message);
         }
         return resp;
     }
@@ -47,7 +47,7 @@ public class HttpResponse<T> implements Serializable {
     @Override
     public String toString() {
         return "HttpResponse{" +
-                "status=" + status +
+                "code=" + code +
                 ", message='" + message + '\'' +
                 ", header=" + header +
                 ", data=" + data +

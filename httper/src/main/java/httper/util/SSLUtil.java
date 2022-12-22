@@ -1,4 +1,4 @@
-package httper.ssl;
+package httper.util;
 
 import java.security.KeyManagementException;
 import java.security.NoSuchAlgorithmException;

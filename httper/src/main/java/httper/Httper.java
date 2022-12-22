@@ -1,8 +1,5 @@
 package httper;
 
-import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
-
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -16,9 +13,9 @@ import httper.request.DownloadRequest;
 import httper.request.GetRequest;
 import httper.request.PostRequest;
 import httper.request.UploadRequest;
-import httper.ssl.EmptyX509TrustManager;
-import httper.ssl.SSLUtil;
+import httper.util.EmptyX509TrustManager;
 import httper.util.MainExecutor;
+import httper.util.SSLUtil;
 import okhttp3.HttpUrl;
 import okhttp3.Interceptor;
 import okhttp3.OkHttpClient;
@@ -28,20 +25,16 @@ public class Httper {
     String baseUrl;
     Map<String, String> headers;
     Executor callbackExecutor;
-    Gson gson;
     OkHttpClient httpClient;
     RequestFilter requestFilter;
-    ResponseParser responseParser;
 
     Httper(Builder builder) {
         this.debug = builder.debug;
         this.baseUrl = builder.baseUrl;
         this.headers = builder.headers;
         this.callbackExecutor = builder.callbackExecutor;
-        this.gson = builder.gson;
         this.httpClient = builder.httpClient;
         this.requestFilter = builder.requestFilter;
-        this.responseParser = builder.responseParser;
     }
 
     public GetRequest get() {
@@ -77,10 +70,6 @@ public class Httper {
         return callbackExecutor;
     }
 
-    public Gson getGson() {
-        return gson;
-    }
-
     public OkHttpClient getHttpClient() {
         return httpClient;
     }
@@ -98,14 +87,11 @@ public class Httper {
         String baseUrl;
         Map<String, String> headers;
         Executor callbackExecutor;
-        Gson gson;
         OkHttpClient httpClient;
         RequestFilter requestFilter;
-        ResponseParser responseParser;
 
         public Builder() {
             callbackExecutor = new MainExecutor();
-            gson = new GsonBuilder().create();
             httpClient = new OkHttpClient.Builder()
                     .sslSocketFactory(SSLUtil.allowAllSSL(), new EmptyX509TrustManager())
                     .build();
@@ -116,7 +102,6 @@ public class Httper {
             this.baseUrl = httper.baseUrl;
             this.headers = httper.headers != null ? new HashMap<>(httper.headers) : null;
             this.callbackExecutor = httper.callbackExecutor;
-            this.gson = httper.gson;
             this.httpClient = httper.httpClient;
             this.requestFilter = httper.requestFilter;
         }
@@ -154,12 +139,6 @@ public class Httper {
             return this;
         }
 
-        public Builder setGson(Gson gson) {
-            if (gson == null) throw new IllegalArgumentException("gson == null");
-            this.gson = gson;
-            return this;
-        }
-
         public Builder setHttpClient(OkHttpClient httpClient) {
             if (httpClient == null) throw new IllegalArgumentException("httpClient == null");
             this.httpClient = httpClient;
@@ -168,11 +147,6 @@ public class Httper {
 
         public Builder setRequestFilter(RequestFilter requestFilter) {
             this.requestFilter = requestFilter;
-            return this;
-        }
-
-        public Builder setResponseParser(ResponseParser responseParser) {
-            this.responseParser = responseParser;
             return this;
         }
 
