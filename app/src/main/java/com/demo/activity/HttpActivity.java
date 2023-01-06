@@ -32,7 +32,7 @@ public class HttpActivity extends BaseActivity {
 
     private void request(String url) {
         Httper httper = new Httper.Builder().setDebug(true).build();
-        httper.get().url(url).request(new HttpCallback<String>() {
+        httper.get(url).request(new HttpCallback<String>() {
             @Override
             public void onResult(HttpResponse<String> httpResponse) {
                 Log.d(TAG, "onResult: " + httpResponse);

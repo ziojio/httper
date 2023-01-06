@@ -9,17 +9,17 @@ import java.util.concurrent.Executor;
 import java.util.concurrent.TimeUnit;
 
 import httper.HttpCallback;
+import httper.HttpMethod;
 import httper.HttpResponse;
 import httper.Httper;
 import httper.Parser;
-import httper.RequestFilter;
 import httper.util.TypeUtil;
 import okhttp3.Call;
 import okhttp3.Callback;
 import okhttp3.Headers;
-import okhttp3.MediaType;
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
+import okhttp3.RequestBody;
 import okhttp3.Response;
 
 /**
@@ -29,32 +29,33 @@ import okhttp3.Response;
  * @see DownloadRequest
  */
 @SuppressWarnings("unchecked")
-abstract class HttpRequest<T extends HttpRequest<?>> {
-    static final MediaType MEDIA_TYPE_JSON = MediaType.parse("application/json; charset=utf-8");
-    static final MediaType MEDIA_TYPE_TEXT = MediaType.parse("text/plain; charset=utf-8");
-    static final MediaType MEDIA_TYPE_STREAM = MediaType.parse("application/octet-stream");
-    static final MediaType MEDIA_TYPE_MARKDOWN = MediaType.parse("text/x-markdown; charset=utf-8");
+public abstract class HttpRequest<T> {
 
-    final boolean debug;
-    final String baseUrl;
-    final RequestFilter requestFilter;
-    final Executor executor;
-    final OkHttpClient httpClient;
+    protected HttpMethod method;
+    protected boolean debug;
+    protected String baseUrl;
+    protected OkHttpClient httpClient;
+    protected Executor executor;
+    protected Call call;
 
-    String url;
-    String tag;
-    long timeout;
-    HashMap<String, String> headers = new HashMap<>();
+    protected String url;
+    protected Object tag;
+    protected long timeout;
+    protected Map<String, String> headers;
+    protected Map<String, String> params;
 
-    public HttpRequest(Httper httper) {
+    public HttpRequest(Httper httper, HttpMethod method) {
+        this.method = method;
         debug = httper.isDebug();
         baseUrl = httper.getBaseUrl();
         executor = httper.getCallbackExecutor();
-        requestFilter = httper.getRequestFilter();
         httpClient = httper.getHttpClient();
 
         if (httper.getHeaders() != null) {
             headers = new HashMap<>(httper.getHeaders());
+        }
+        if (httper.getParams() != null) {
+            params = new HashMap<>(httper.getParams());
         }
     }
 
@@ -65,6 +66,13 @@ abstract class HttpRequest<T extends HttpRequest<?>> {
 
     public T timeout(long timeout, TimeUnit timeUnit) {
         this.timeout = timeUnit.toMillis(timeout);
+        return (T) this;
+    }
+
+    public T executor(Executor executor) {
+        if (executor != null) {
+            this.executor = executor;
+        }
         return (T) this;
     }
 
@@ -85,12 +93,23 @@ abstract class HttpRequest<T extends HttpRequest<?>> {
         return (T) this;
     }
 
-    public T tag(String tag) {
+    public T tag(Object tag) {
         this.tag = tag;
         return (T) this;
     }
 
-    String generateUrl() {
+    public void cancel() {
+        if (call != null) {
+            call.cancel();
+            call = null;
+        }
+    }
+
+    protected RequestBody generateRequestBody() {
+        return null;
+    }
+
+    protected String generateUrl() {
         String httpUrl;
         if (url == null || url.isBlank()) {
             httpUrl = Objects.requireNonNull(baseUrl, "baseUrl is empty");
@@ -102,7 +121,7 @@ abstract class HttpRequest<T extends HttpRequest<?>> {
         return httpUrl;
     }
 
-    OkHttpClient generateOkClient() {
+    protected OkHttpClient generateOkClient() {
         if (timeout > 0) {
             return httpClient.newBuilder()
                     .connectTimeout(timeout, TimeUnit.MILLISECONDS)
@@ -113,7 +132,7 @@ abstract class HttpRequest<T extends HttpRequest<?>> {
         return httpClient;
     }
 
-    Request.Builder generateRequest() {
+    protected Request.Builder generateRequest() {
         Request.Builder builder = new Request.Builder();
         if (headers != null && !headers.isEmpty()) {
             builder.headers(Headers.of(headers));
@@ -124,7 +143,7 @@ abstract class HttpRequest<T extends HttpRequest<?>> {
         return builder;
     }
 
-    <R> Callback generateCallback(HttpCallback<R> callback) {
+    protected <R> Callback generateCallback(HttpCallback<R> callback) {
         Type dataType = TypeUtil.getGenericInterfaceTypeParameter(callback);
         return new Callback() {
             @Override

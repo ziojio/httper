@@ -24,25 +24,25 @@ public class Httper {
     boolean debug;
     String baseUrl;
     Map<String, String> headers;
+    Map<String, String> params;
     Executor callbackExecutor;
     OkHttpClient httpClient;
-    RequestFilter requestFilter;
 
     Httper(Builder builder) {
         this.debug = builder.debug;
         this.baseUrl = builder.baseUrl;
         this.headers = builder.headers;
+        this.params = builder.params;
         this.callbackExecutor = builder.callbackExecutor;
         this.httpClient = builder.httpClient;
-        this.requestFilter = builder.requestFilter;
     }
 
-    public GetRequest get() {
-        return new GetRequest(this);
+    public GetRequest get(String url) {
+        return new GetRequest(this).url(url);
     }
 
-    public PostRequest post() {
-        return new PostRequest(this);
+    public PostRequest post(String url) {
+        return new PostRequest(this).url(url);
     }
 
     public DownloadRequest download() {
@@ -66,16 +66,16 @@ public class Httper {
         return headers;
     }
 
+    public Map<String, String> getParams() {
+        return params;
+    }
+
     public Executor getCallbackExecutor() {
         return callbackExecutor;
     }
 
     public OkHttpClient getHttpClient() {
         return httpClient;
-    }
-
-    public RequestFilter getRequestFilter() {
-        return requestFilter;
     }
 
     public Builder newBuilder() {
@@ -86,6 +86,7 @@ public class Httper {
         boolean debug;
         String baseUrl;
         Map<String, String> headers;
+        Map<String, String> params;
         Executor callbackExecutor;
         OkHttpClient httpClient;
         RequestFilter requestFilter;
@@ -101,9 +102,9 @@ public class Httper {
             this.debug = httper.debug;
             this.baseUrl = httper.baseUrl;
             this.headers = httper.headers != null ? new HashMap<>(httper.headers) : null;
+            this.params = httper.params != null ? new HashMap<>(httper.params) : null;
             this.callbackExecutor = httper.callbackExecutor;
             this.httpClient = httper.httpClient;
-            this.requestFilter = httper.requestFilter;
         }
 
         public Builder setDebug(boolean debug) {
@@ -134,6 +135,19 @@ public class Httper {
             return this;
         }
 
+        public Builder setParams(Map<String, String> params) {
+            this.params = params;
+            return this;
+        }
+
+        public Builder addParam(String key, String value) {
+            if (this.params == null) {
+                this.params = new HashMap<>();
+            }
+            this.params.put(key, value);
+            return this;
+        }
+
         public Builder setCallbackExecutor(Executor executor) {
             this.callbackExecutor = executor;
             return this;
@@ -158,6 +172,9 @@ public class Httper {
             }
             if (headers != null) {
                 headers = Collections.unmodifiableMap(headers);
+            }
+            if (params != null) {
+                params = Collections.unmodifiableMap(params);
             }
             return new Httper(this);
         }

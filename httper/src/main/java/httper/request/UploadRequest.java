@@ -9,6 +9,7 @@ import java.util.List;
 import java.util.Map;
 
 import httper.HttpCallback;
+import httper.HttpMethod;
 import httper.Httper;
 import okhttp3.Call;
 import okhttp3.MediaType;
@@ -17,6 +18,9 @@ import okhttp3.Request;
 import okhttp3.RequestBody;
 
 public class UploadRequest extends HttpRequest<UploadRequest> {
+    static final MediaType MEDIA_TYPE_STREAM = MediaType.parse("application/octet-stream");
+    static final MediaType MEDIA_TYPE_MARKDOWN = MediaType.parse("text/x-markdown; charset=utf-8");
+
     private final HashMap<String, String> formData = new HashMap<>();
     private final HashMap<String, StringBody> stringBodyMap = new HashMap<>();
     private final HashMap<String, List<FileBody>> fileBodyMap = new HashMap<>();
@@ -24,7 +28,7 @@ public class UploadRequest extends HttpRequest<UploadRequest> {
     private UploadProgressListener uploadProgressListener;
 
     public UploadRequest(Httper httper) {
-        super(httper);
+        super(httper, HttpMethod.POST);
     }
 
     private static String getMimeType(String path) {
@@ -72,9 +76,6 @@ public class UploadRequest extends HttpRequest<UploadRequest> {
 
     public <R> void request(HttpCallback<R> callback) {
         String httpUrl = generateUrl();
-        if (requestFilter != null) {
-            requestFilter.filter(httpUrl, formData);
-        }
 
         Request.Builder builder = generateRequest().url(httpUrl);
         MultipartBody.Builder bodyBuilder = new MultipartBody.Builder().setType(MultipartBody.FORM);

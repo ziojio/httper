@@ -71,9 +71,7 @@ public class Parser {
         public Map<String, String> fromObject(Object object) {
             try {
                 return (Map<String, String>)
-                        gson.fromJson(
-                                gson.toJson(object),
-                                TypeToken.getParameterized(Map.class, String.class, String.class));
+                        gson.fromJson(gson.toJson(object), TypeToken.getParameterized(Map.class, String.class, String.class));
             } catch (Exception e) {
                 e.printStackTrace();
             }

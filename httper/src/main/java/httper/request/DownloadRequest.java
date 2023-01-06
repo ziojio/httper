@@ -7,31 +7,30 @@ import java.io.IOException;
 import java.io.InputStream;
 
 import httper.HttpCallback;
+import httper.HttpMethod;
 import httper.HttpResponse;
 import httper.Httper;
 import httper.util.FileUtil;
 import okhttp3.Call;
 import okhttp3.Callback;
-import okhttp3.Request;
 import okhttp3.Response;
 import okhttp3.ResponseBody;
 
 public class DownloadRequest extends HttpRequest<DownloadRequest> {
-    private String filePath;
-    private Call call;
+    private File file;
     private DownloadProgressListener downloadProgressListener;
 
     public DownloadRequest(Httper httper) {
-        super(httper);
+        super(httper, HttpMethod.GET);
     }
 
     public DownloadRequest setFilePath(String filePath) {
-        this.filePath = filePath;
+        this.file = new File(filePath);
         return this;
     }
 
-    public DownloadRequest setFilePath(String dirPath, String filePath) {
-        this.filePath = new File(dirPath, filePath).getAbsolutePath();
+    public DownloadRequest setFilePath(String dirPath, String fileName) {
+        this.file = new File(dirPath, fileName);
         return this;
     }
 
@@ -40,18 +39,21 @@ public class DownloadRequest extends HttpRequest<DownloadRequest> {
         return this;
     }
 
-    public void request(HttpCallback<String> callback) {
-        Request request = generateRequest().url(url).build();
-        call = generateOkClient().newCall(request);
-        call.enqueue(new Callback() {
+    public void request(HttpCallback<File> callback) {
+
+    }
+
+    @Override
+    protected <R> Callback generateCallback(HttpCallback<R> callback) {
+        return new Callback() {
             @Override
             public void onResponse(Call call, Response response) {
-                final HttpResponse<String> resp = HttpResponse.processResponse(response);
+                final HttpResponse<File> resp = HttpResponse.processResponse(response);
                 if (response.isSuccessful()) {
-                    if (FileUtil.createOrExistsFile(filePath)) {
+                    if (FileUtil.createOrExistsFile(file)) {
                         try {
                             writeFile(response.body());
-                            resp.data = filePath;
+                            resp.data = file;
                         } catch (Exception e) {
                             resp.error = new HttpResponse.Error(-104, e.getMessage());
                         }
@@ -83,7 +85,7 @@ public class DownloadRequest extends HttpRequest<DownloadRequest> {
                 BufferedOutputStream outputStream = null;
                 try {
                     inputStream = body.byteStream();
-                    outputStream = new BufferedOutputStream(new FileOutputStream(filePath));
+                    outputStream = new BufferedOutputStream(new FileOutputStream(file));
 
                     long total = body.contentLength();
                     long down = 0;
@@ -118,13 +120,7 @@ public class DownloadRequest extends HttpRequest<DownloadRequest> {
                     }
                 }
             }
-        });
+        };
     }
 
-    public void cancel() {
-        if (call != null) {
-            call.cancel();
-            call = null;
-        }
-    }
 }

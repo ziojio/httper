@@ -4,16 +4,19 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
 
-import httper.HttpCallback;
+import httper.HttpMethod;
 import httper.Httper;
 import okhttp3.HttpUrl;
-import okhttp3.Request;
+
 
 public class GetRequest extends HttpRequest<GetRequest> {
     private final HashMap<String, String> queryMap = new HashMap<>();
 
     public GetRequest(Httper config) {
-        super(config);
+        super(config, HttpMethod.GET);
+        if (params != null) {
+            queryMap.putAll(params);
+        }
     }
 
     public GetRequest addQueryParameter(Map<String, String> map) {
@@ -26,15 +29,11 @@ public class GetRequest extends HttpRequest<GetRequest> {
         return this;
     }
 
-    public <R> void request(HttpCallback<R> callback) {
-        String httpUrl = generateUrl();
-        if (requestFilter != null) {
-            requestFilter.filter(httpUrl, queryMap);
-        }
+    @Override
+    protected String generateUrl() {
+        String httpUrl = super.generateUrl();
         httpUrl = buildUrlWithParams(httpUrl, queryMap);
-
-        Request request = generateRequest().url(httpUrl).build();
-        generateOkClient().newCall(request).enqueue(generateCallback(callback));
+        return httpUrl;
     }
 
     private String buildUrlWithParams(String url, Map<String, String> map) {
@@ -42,8 +41,8 @@ public class GetRequest extends HttpRequest<GetRequest> {
         if (map != null) {
             for (Map.Entry<String, String> entry : map.entrySet()) {
                 String name = entry.getKey();
-                Object value = entry.getValue();
-                urlBuilder.addQueryParameter(name, String.valueOf(value));
+                String value = entry.getValue();
+                urlBuilder.addQueryParameter(name, value);
             }
         }
         return urlBuilder.build().toString();

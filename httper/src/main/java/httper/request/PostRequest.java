@@ -4,20 +4,26 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
 
-import httper.HttpCallback;
+import httper.HttpMethod;
 import httper.Httper;
+import httper.Parser;
 import okhttp3.FormBody;
-import okhttp3.Request;
+import okhttp3.MediaType;
 import okhttp3.RequestBody;
 
+
 public class PostRequest extends HttpRequest<PostRequest> {
-    private HashMap<String, String> formData;
+    static final MediaType MEDIA_TYPE_JSON = MediaType.parse("application/json; charset=utf-8");
+
+    private Map<String, String> formData;
     private String jsonBody;
-    private String textBody;
     private RequestBody customBody;
 
     public PostRequest(Httper httper) {
-        super(httper);
+        super(httper, HttpMethod.POST);
+        if (params != null) {
+            this.formData = new HashMap<>(params);
+        }
     }
 
     public PostRequest addFormData(String name, String value) {
@@ -37,13 +43,13 @@ public class PostRequest extends HttpRequest<PostRequest> {
         return this;
     }
 
-    public PostRequest setJsonBody(String jsonBody) {
-        this.jsonBody = jsonBody;
+    public PostRequest setJsonBody(Object json) {
+        this.jsonBody = Parser.getParserFactory().toJson(json);
         return this;
     }
 
-    public PostRequest setTextBody(String textBody) {
-        this.textBody = textBody;
+    public PostRequest setJsonBody(String jsonBody) {
+        this.jsonBody = jsonBody;
         return this;
     }
 
@@ -52,21 +58,13 @@ public class PostRequest extends HttpRequest<PostRequest> {
         return this;
     }
 
-    public <R> void request(HttpCallback<R> callback) {
-        String httpUrl = generateUrl();
-        if (requestFilter != null && formData != null) {
-            requestFilter.filter(httpUrl, formData);
-        }
-        Request.Builder builder = generateRequest().url(httpUrl);
+    @Override
+    protected RequestBody generateRequestBody() {
         RequestBody body = null;
         if (formData != null) body = createFormRequestBody(formData);
-        else if (jsonBody != null) body = RequestBody.create(MEDIA_TYPE_JSON, jsonBody);
-        else if (textBody != null) body = RequestBody.create(MEDIA_TYPE_TEXT, textBody);
-        else if (customBody != null) body = customBody;
-        Objects.requireNonNull(body, "POST must have a request body.");
-
-        Request request = builder.post(body).build();
-        generateOkClient().newCall(request).enqueue(generateCallback(callback));
+        if (jsonBody != null) body = RequestBody.create(MEDIA_TYPE_JSON, jsonBody);
+        if (customBody != null) body = customBody;
+        return Objects.requireNonNull(body, "POST must have a request body.");
     }
 
     private FormBody createFormRequestBody(Map<String, String> map) {
