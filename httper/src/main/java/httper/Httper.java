@@ -45,12 +45,12 @@ public class Httper {
         return new PostRequest(this).url(url);
     }
 
-    public DownloadRequest download() {
-        return new DownloadRequest(this);
+    public DownloadRequest download(String url) {
+        return new DownloadRequest(this).url(url);
     }
 
-    public UploadRequest upload() {
-        return new UploadRequest(this);
+    public UploadRequest upload(String url) {
+        return new UploadRequest(this).url(url);
     }
 
 

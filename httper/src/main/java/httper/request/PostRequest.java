@@ -4,19 +4,17 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
 
+import httper.HttpCallback;
 import httper.HttpMethod;
 import httper.Httper;
 import httper.Parser;
 import okhttp3.FormBody;
-import okhttp3.MediaType;
+import okhttp3.Request;
 import okhttp3.RequestBody;
 
-
 public class PostRequest extends HttpRequest<PostRequest> {
-    static final MediaType MEDIA_TYPE_JSON = MediaType.parse("application/json; charset=utf-8");
-
-    private Map<String, String> formData;
     private String jsonBody;
+    private Map<String, String> formData;
     private RequestBody customBody;
 
     public PostRequest(Httper httper) {
@@ -56,6 +54,17 @@ public class PostRequest extends HttpRequest<PostRequest> {
     public PostRequest setCustomBody(RequestBody customBody) {
         this.customBody = customBody;
         return this;
+    }
+
+    public <R> void request(HttpCallback<R> callback) {
+        String httpUrl = generateUrl();
+
+        Request.Builder builder = generateRequest().url(httpUrl);
+        RequestBody body = generateRequestBody();
+        Request request = builder.post(body).build();
+
+        call = generateOkClient().newCall(request);
+        call.enqueue(generateCallback(callback));
     }
 
     @Override

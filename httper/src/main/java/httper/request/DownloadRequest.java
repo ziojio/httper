@@ -13,6 +13,7 @@ import httper.Httper;
 import httper.util.FileUtil;
 import okhttp3.Call;
 import okhttp3.Callback;
+import okhttp3.Request;
 import okhttp3.Response;
 import okhttp3.ResponseBody;
 
@@ -40,7 +41,13 @@ public class DownloadRequest extends HttpRequest<DownloadRequest> {
     }
 
     public void request(HttpCallback<File> callback) {
+        String httpUrl = generateUrl();
 
+        Request.Builder builder = generateRequest().url(httpUrl);
+        Request request = builder.build();
+
+        call = generateOkClient().newCall(request);
+        call.enqueue(generateCallback(callback));
     }
 
     @Override

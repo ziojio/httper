@@ -17,6 +17,7 @@ import httper.util.TypeUtil;
 import okhttp3.Call;
 import okhttp3.Callback;
 import okhttp3.Headers;
+import okhttp3.MediaType;
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
 import okhttp3.RequestBody;
@@ -30,6 +31,9 @@ import okhttp3.Response;
  */
 @SuppressWarnings("unchecked")
 public abstract class HttpRequest<T> {
+    protected static final MediaType MEDIA_TYPE_JSON = MediaType.parse("application/json; charset=utf-8");
+    protected static final MediaType MEDIA_TYPE_STREAM = MediaType.parse("application/octet-stream");
+    protected static final MediaType MEDIA_TYPE_MARKDOWN = MediaType.parse("text/x-markdown; charset=utf-8");
 
     protected HttpMethod method;
     protected boolean debug;
