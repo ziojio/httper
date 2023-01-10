@@ -1,4 +1,4 @@
-package httper.request;
+package httper;
 
 import java.io.IOException;
 import java.lang.reflect.Type;
@@ -8,11 +8,6 @@ import java.util.Objects;
 import java.util.concurrent.Executor;
 import java.util.concurrent.TimeUnit;
 
-import httper.HttpCallback;
-import httper.HttpMethod;
-import httper.HttpResponse;
-import httper.Httper;
-import httper.Parser;
 import httper.util.TypeUtil;
 import okhttp3.Call;
 import okhttp3.Callback;
@@ -35,7 +30,6 @@ public abstract class HttpRequest<T> {
     protected static final MediaType MEDIA_TYPE_STREAM = MediaType.parse("application/octet-stream");
     protected static final MediaType MEDIA_TYPE_MARKDOWN = MediaType.parse("text/x-markdown; charset=utf-8");
 
-    protected HttpMethod method;
     protected boolean debug;
     protected String baseUrl;
     protected OkHttpClient httpClient;
@@ -48,11 +42,10 @@ public abstract class HttpRequest<T> {
     protected Map<String, String> headers;
     protected Map<String, String> params;
 
-    public HttpRequest(Httper httper, HttpMethod method) {
-        this.method = method;
+    public HttpRequest(Httper httper) {
         debug = httper.isDebug();
         baseUrl = httper.getBaseUrl();
-        executor = httper.getCallbackExecutor();
+        executor = httper.getExecutor();
         httpClient = httper.getHttpClient();
 
         if (httper.getHeaders() != null) {
@@ -147,7 +140,7 @@ public abstract class HttpRequest<T> {
         return builder;
     }
 
-    protected <R> Callback generateCallback(HttpCallback<R> callback) {
+    protected <E> Callback generateCallback(HttpCallback<E> callback) {
         Type dataType = TypeUtil.getGenericInterfaceTypeParameter(callback);
         return new Callback() {
             @Override

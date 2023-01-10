@@ -1,4 +1,4 @@
-package httper.request;
+package httper;
 
 import java.io.BufferedOutputStream;
 import java.io.File;
@@ -6,10 +6,6 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 
-import httper.HttpCallback;
-import httper.HttpMethod;
-import httper.HttpResponse;
-import httper.Httper;
 import httper.util.FileUtil;
 import okhttp3.Call;
 import okhttp3.Callback;
@@ -22,7 +18,7 @@ public class DownloadRequest extends HttpRequest<DownloadRequest> {
     private DownloadProgressListener downloadProgressListener;
 
     public DownloadRequest(Httper httper) {
-        super(httper, HttpMethod.GET);
+        super(httper);
     }
 
     public DownloadRequest setFilePath(String filePath) {
@@ -51,7 +47,7 @@ public class DownloadRequest extends HttpRequest<DownloadRequest> {
     }
 
     @Override
-    protected <R> Callback generateCallback(HttpCallback<R> callback) {
+    protected <E> Callback generateCallback(HttpCallback<E> callback) {
         return new Callback() {
             @Override
             public void onResponse(Call call, Response response) {

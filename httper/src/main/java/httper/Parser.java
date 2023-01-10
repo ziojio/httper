@@ -22,7 +22,7 @@ public class Parser {
         mParserFactory = factory;
     }
 
-    public static void shutdown() {
+    public static void release() {
         mParserFactory = null;
     }
 

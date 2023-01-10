@@ -1,13 +1,9 @@
-package httper.request;
+package httper;
 
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
 
-import httper.HttpCallback;
-import httper.HttpMethod;
-import httper.Httper;
-import httper.Parser;
 import okhttp3.FormBody;
 import okhttp3.Request;
 import okhttp3.RequestBody;
@@ -18,7 +14,7 @@ public class PostRequest extends HttpRequest<PostRequest> {
     private RequestBody customBody;
 
     public PostRequest(Httper httper) {
-        super(httper, HttpMethod.POST);
+        super(httper);
         if (params != null) {
             this.formData = new HashMap<>(params);
         }
@@ -56,7 +52,7 @@ public class PostRequest extends HttpRequest<PostRequest> {
         return this;
     }
 
-    public <R> void request(HttpCallback<R> callback) {
+    public <E> void request(HttpCallback<E> callback) {
         String httpUrl = generateUrl();
 
         Request.Builder builder = generateRequest().url(httpUrl);

@@ -1,4 +1,4 @@
-package httper.request;
+package httper;
 
 import java.io.IOException;
 

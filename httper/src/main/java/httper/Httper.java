@@ -9,11 +9,6 @@ import java.util.Objects;
 import java.util.concurrent.Executor;
 
 import httper.interceptor.LogInterceptor;
-import httper.request.DownloadRequest;
-import httper.request.GetRequest;
-import httper.request.PostRequest;
-import httper.request.UploadRequest;
-import httper.util.EmptyX509TrustManager;
 import httper.util.MainExecutor;
 import httper.util.SSLUtil;
 import okhttp3.HttpUrl;
@@ -25,7 +20,7 @@ public class Httper {
     String baseUrl;
     Map<String, String> headers;
     Map<String, String> params;
-    Executor callbackExecutor;
+    Executor executor;
     OkHttpClient httpClient;
 
     Httper(Builder builder) {
@@ -33,7 +28,7 @@ public class Httper {
         this.baseUrl = builder.baseUrl;
         this.headers = builder.headers;
         this.params = builder.params;
-        this.callbackExecutor = builder.callbackExecutor;
+        this.executor = builder.executor;
         this.httpClient = builder.httpClient;
     }
 
@@ -70,8 +65,8 @@ public class Httper {
         return params;
     }
 
-    public Executor getCallbackExecutor() {
-        return callbackExecutor;
+    public Executor getExecutor() {
+        return executor;
     }
 
     public OkHttpClient getHttpClient() {
@@ -87,14 +82,13 @@ public class Httper {
         String baseUrl;
         Map<String, String> headers;
         Map<String, String> params;
-        Executor callbackExecutor;
+        Executor executor;
         OkHttpClient httpClient;
-        RequestFilter requestFilter;
 
         public Builder() {
-            callbackExecutor = new MainExecutor();
+            executor = new MainExecutor();
             httpClient = new OkHttpClient.Builder()
-                    .sslSocketFactory(SSLUtil.allowAllSSL(), new EmptyX509TrustManager())
+                    .sslSocketFactory(SSLUtil.allowAllSSL(), new SSLUtil.EmptyX509TrustManager())
                     .build();
         }
 
@@ -103,7 +97,7 @@ public class Httper {
             this.baseUrl = httper.baseUrl;
             this.headers = httper.headers != null ? new HashMap<>(httper.headers) : null;
             this.params = httper.params != null ? new HashMap<>(httper.params) : null;
-            this.callbackExecutor = httper.callbackExecutor;
+            this.executor = httper.executor;
             this.httpClient = httper.httpClient;
         }
 
@@ -148,19 +142,14 @@ public class Httper {
             return this;
         }
 
-        public Builder setCallbackExecutor(Executor executor) {
-            this.callbackExecutor = executor;
+        public Builder setExecutor(Executor executor) {
+            this.executor = executor;
             return this;
         }
 
         public Builder setHttpClient(OkHttpClient httpClient) {
             if (httpClient == null) throw new IllegalArgumentException("httpClient == null");
             this.httpClient = httpClient;
-            return this;
-        }
-
-        public Builder setRequestFilter(RequestFilter requestFilter) {
-            this.requestFilter = requestFilter;
             return this;
         }
 

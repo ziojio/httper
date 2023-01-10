@@ -1,4 +1,4 @@
-package httper.request;
+package httper;
 
 import java.io.File;
 import java.net.FileNameMap;
@@ -8,9 +8,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import httper.HttpCallback;
-import httper.HttpMethod;
-import httper.Httper;
 import okhttp3.MediaType;
 import okhttp3.MultipartBody;
 import okhttp3.Request;
@@ -24,7 +21,7 @@ public class UploadRequest extends HttpRequest<UploadRequest> {
     private UploadProgressListener uploadProgressListener;
 
     public UploadRequest(Httper httper) {
-        super(httper, HttpMethod.POST);
+        super(httper);
     }
 
     private static String getMimeType(String path) {
@@ -70,7 +67,7 @@ public class UploadRequest extends HttpRequest<UploadRequest> {
         return this;
     }
 
-    public <R> void request(HttpCallback<R> callback) {
+    public <E> void request(HttpCallback<E> callback) {
         String httpUrl = generateUrl();
 
         Request.Builder builder = generateRequest().url(httpUrl);
