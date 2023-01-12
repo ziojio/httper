@@ -14,8 +14,9 @@ import okhttp3.Response;
 import okhttp3.ResponseBody;
 
 public class DownloadRequest extends HttpRequest<DownloadRequest> {
+
     private File file;
-    private DownloadProgressListener downloadProgressListener;
+    private DownloadProgressListener listener;
 
     public DownloadRequest(Httper httper) {
         super(httper);
@@ -32,7 +33,7 @@ public class DownloadRequest extends HttpRequest<DownloadRequest> {
     }
 
     public DownloadRequest setDownloadProgressListener(DownloadProgressListener listener) {
-        this.downloadProgressListener = listener;
+        this.listener = listener;
         return this;
     }
 
@@ -115,11 +116,11 @@ public class DownloadRequest extends HttpRequest<DownloadRequest> {
             }
 
             private void onProgress(long downloadBytes, long totalBytes) {
-                if (downloadProgressListener != null) {
+                if (listener != null) {
                     if (executor != null) {
-                        executor.execute(() -> downloadProgressListener.onProgress(downloadBytes, totalBytes));
+                        executor.execute(() -> listener.onProgress(downloadBytes, totalBytes));
                     } else {
-                        downloadProgressListener.onProgress(downloadBytes, totalBytes);
+                        listener.onProgress(downloadBytes, totalBytes);
                     }
                 }
             }

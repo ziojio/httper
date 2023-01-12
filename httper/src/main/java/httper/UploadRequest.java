@@ -1,7 +1,6 @@
 package httper;
 
 import java.io.File;
-import java.net.FileNameMap;
 import java.net.URLConnection;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -14,23 +13,36 @@ import okhttp3.Request;
 import okhttp3.RequestBody;
 
 public class UploadRequest extends HttpRequest<UploadRequest> {
-    private final HashMap<String, String> formData = new HashMap<>();
-    private final HashMap<String, StringBody> stringBodyMap = new HashMap<>();
-    private final HashMap<String, List<FileBody>> fileBodyMap = new HashMap<>();
 
-    private UploadProgressListener uploadProgressListener;
+    private final Map<String, String> formData = new HashMap<>();
+    private final Map<String, RequestBody> bodyMap = new HashMap<>();
+    private final Map<String, List<FileBody>> fileBodyMap = new HashMap<>();
+
+    private UploadProgressListener listener;
 
     public UploadRequest(Httper httper) {
         super(httper);
+        if (httper.params != null) {
+            this.formData.putAll(httper.params);
+        }
     }
 
-    private static String getMimeType(String path) {
-        FileNameMap fileNameMap = URLConnection.getFileNameMap();
-        String contentTypeFor = fileNameMap.getContentTypeFor(path);
+    private static String getMimeType(String fileName) {
+        String contentTypeFor = URLConnection.getFileNameMap().getContentTypeFor(fileName);
         if (contentTypeFor == null) {
             contentTypeFor = "application/octet-stream";
         }
         return contentTypeFor;
+    }
+
+    public UploadRequest addFormData(String name, String value) {
+        this.formData.put(name, value);
+        return this;
+    }
+
+    public UploadRequest addFormData(Map<String, String> formData) {
+        this.formData.putAll(formData);
+        return this;
     }
 
     public UploadRequest addFile(String name, File file) {
@@ -47,48 +59,14 @@ public class UploadRequest extends HttpRequest<UploadRequest> {
         return this;
     }
 
-    public UploadRequest addFormData(String name, String value) {
-        this.formData.put(name, value);
-        return this;
-    }
-
-    public UploadRequest addFormData(Map<String, String> formData) {
-        this.formData.putAll(formData);
-        return this;
-    }
-
-    public UploadRequest addFormData(String name, String value, String contentType) {
-        this.stringBodyMap.put(name, new StringBody(value, contentType));
+    public UploadRequest addBody(String name, RequestBody body) {
+        this.bodyMap.put(name, body);
         return this;
     }
 
     public UploadRequest setUploadProgressListener(UploadProgressListener listener) {
-        this.uploadProgressListener = listener;
+        this.listener = listener;
         return this;
-    }
-
-    public <E> void request(HttpCallback<E> callback) {
-        String httpUrl = generateUrl();
-
-        Request.Builder builder = generateRequest().url(httpUrl);
-        MultipartBody.Builder bodyBuilder = new MultipartBody.Builder().setType(MultipartBody.FORM);
-        addFormData(bodyBuilder);
-        addStringBody(bodyBuilder);
-        addFileBody(bodyBuilder);
-        RequestBody body = bodyBuilder.build();
-        if (uploadProgressListener != null) {
-            body = new MultipartProgressBody(body, (uploadBytes, totalBytes) -> {
-                if (executor != null) {
-                    executor.execute(() -> uploadProgressListener.onProgress(uploadBytes, totalBytes));
-                } else {
-                    uploadProgressListener.onProgress(uploadBytes, totalBytes);
-                }
-            });
-        }
-        Request request = builder.post(body).build();
-
-        call = generateOkClient().newCall(request);
-        call.enqueue(generateCallback(callback));
     }
 
     private void addFormData(MultipartBody.Builder body) {
@@ -97,15 +75,30 @@ public class UploadRequest extends HttpRequest<UploadRequest> {
         }
     }
 
-    private void addStringBody(MultipartBody.Builder body) {
-        for (Map.Entry<String, StringBody> entry : stringBodyMap.entrySet()) {
-            StringBody stringBody = entry.getValue();
-            MediaType mediaType = null;
-            if (stringBody.contentType != null) {
-                mediaType = MediaType.parse(stringBody.contentType);
-            }
-            body.addFormDataPart(entry.getKey(), null,
-                    RequestBody.create(mediaType, stringBody.data));
+    public <E> void request(HttpCallback<E> callback) {
+        String httpUrl = generateUrl();
+
+        Request.Builder builder = generateRequest().url(httpUrl);
+        MultipartBody.Builder bodyBuilder = new MultipartBody.Builder().setType(MultipartBody.FORM);
+        addFormData(bodyBuilder);
+        addBody(bodyBuilder);
+        addFileBody(bodyBuilder);
+        RequestBody body = bodyBuilder.build();
+        if (listener != null) {
+            UploadProgressListener l = executor != null
+                    ? (uploadBytes, totalBytes) -> executor.execute(() -> listener.onProgress(uploadBytes, totalBytes))
+                    : (uploadBytes, totalBytes) -> listener.onProgress(uploadBytes, totalBytes);
+            body = new UploadBody(body, l);
+        }
+        Request request = builder.post(body).build();
+
+        call = generateOkClient().newCall(request);
+        call.enqueue(generateCallback(callback));
+    }
+
+    private void addBody(MultipartBody.Builder body) {
+        for (Map.Entry<String, RequestBody> entry : bodyMap.entrySet()) {
+            body.addFormDataPart(entry.getKey(), null, entry.getValue());
         }
     }
 
@@ -114,22 +107,12 @@ public class UploadRequest extends HttpRequest<UploadRequest> {
             List<FileBody> fileBodies = entry.getValue();
             for (FileBody fileBody : fileBodies) {
                 String fileName = fileBody.file.getName();
-                MediaType mediaType;
-                if (fileBody.contentType != null) {
-                    mediaType = MediaType.parse(fileBody.contentType);
-                } else {
-                    mediaType = MediaType.parse(getMimeType(fileName));
-                }
+                MediaType mediaType = fileBody.contentType != null
+                        ? MediaType.parse(fileBody.contentType)
+                        : MediaType.parse(getMimeType(fileName));
                 RequestBody requestBody = RequestBody.create(mediaType, fileBody.file);
                 body.addFormDataPart(entry.getKey(), fileName, requestBody);
             }
-        }
-    }
-
-    public void cancel() {
-        if (call != null) {
-            call.cancel();
-            call = null;
         }
     }
 
@@ -139,16 +122,6 @@ public class UploadRequest extends HttpRequest<UploadRequest> {
 
         public FileBody(File file, String contentType) {
             this.file = file;
-            this.contentType = contentType;
-        }
-    }
-
-    static class StringBody {
-        public String data;
-        public String contentType;
-
-        public StringBody(String data, String contentType) {
-            this.data = data;
             this.contentType = contentType;
         }
     }

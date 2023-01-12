@@ -8,12 +8,13 @@ import okhttp3.HttpUrl;
 import okhttp3.Request;
 
 public class GetRequest extends HttpRequest<GetRequest> {
-    private final HashMap<String, String> queryMap = new HashMap<>();
 
-    public GetRequest(Httper config) {
-        super(config);
-        if (params != null) {
-            queryMap.putAll(params);
+    private final Map<String, String> queryMap = new HashMap<>();
+
+    public GetRequest(Httper httper) {
+        super(httper);
+        if (httper.params != null) {
+            queryMap.putAll(httper.params);
         }
     }
 

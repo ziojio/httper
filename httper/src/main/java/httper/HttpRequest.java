@@ -26,38 +26,40 @@ import okhttp3.Response;
  */
 @SuppressWarnings("unchecked")
 public abstract class HttpRequest<T> {
-    protected static final MediaType MEDIA_TYPE_JSON = MediaType.parse("application/json; charset=utf-8");
-    protected static final MediaType MEDIA_TYPE_STREAM = MediaType.parse("application/octet-stream");
-    protected static final MediaType MEDIA_TYPE_MARKDOWN = MediaType.parse("text/x-markdown; charset=utf-8");
 
-    protected boolean debug;
-    protected String baseUrl;
-    protected OkHttpClient httpClient;
-    protected Executor executor;
-    protected Call call;
+    static final MediaType MEDIA_TYPE_JSON = MediaType.parse("application/json; charset=utf-8");
+    static final MediaType MEDIA_TYPE_STREAM = MediaType.parse("application/octet-stream");
+    static final MediaType MEDIA_TYPE_MARKDOWN = MediaType.parse("text/x-markdown; charset=utf-8");
+
+    boolean debug;
+    String baseUrl;
+    OkHttpClient httpClient;
+    Executor executor;
+    Call call;
 
     protected String url;
     protected Object tag;
     protected long timeout;
     protected Map<String, String> headers;
-    protected Map<String, String> params;
 
     public HttpRequest(Httper httper) {
-        debug = httper.isDebug();
-        baseUrl = httper.getBaseUrl();
-        executor = httper.getExecutor();
-        httpClient = httper.getHttpClient();
+        debug = httper.debug;
+        baseUrl = httper.baseUrl;
+        executor = httper.executor;
+        httpClient = httper.httpClient;
 
-        if (httper.getHeaders() != null) {
-            headers = new HashMap<>(httper.getHeaders());
-        }
-        if (httper.getParams() != null) {
-            params = new HashMap<>(httper.getParams());
+        if (httper.headers != null) {
+            headers = new HashMap<>(httper.headers);
         }
     }
 
     public T url(String url) {
         this.url = url;
+        return (T) this;
+    }
+
+    public T timeout(long timeoutMillis) {
+        this.timeout = timeoutMillis;
         return (T) this;
     }
 

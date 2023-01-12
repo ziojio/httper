@@ -11,11 +11,13 @@ import java.util.concurrent.Executor;
 import httper.interceptor.LogInterceptor;
 import httper.util.MainExecutor;
 import httper.util.SSLUtil;
+import okhttp3.Call;
 import okhttp3.HttpUrl;
 import okhttp3.Interceptor;
 import okhttp3.OkHttpClient;
 
 public class Httper {
+
     boolean debug;
     String baseUrl;
     Map<String, String> headers;
@@ -75,6 +77,20 @@ public class Httper {
 
     public Builder newBuilder() {
         return new Builder(this);
+    }
+
+
+    public void cancel(Object tag) {
+        for (Call call : httpClient.dispatcher().queuedCalls()) {
+            if (call.request().tag() == tag) {
+                call.cancel();
+            }
+        }
+        for (Call call : httpClient.dispatcher().runningCalls()) {
+            if (call.request().tag() == tag) {
+                call.cancel();
+            }
+        }
     }
 
     public static class Builder {

@@ -10,12 +10,12 @@ import okio.ForwardingSink;
 import okio.Okio;
 import okio.Sink;
 
-public class MultipartProgressBody extends RequestBody {
-    private final UploadProgressListener uploadListener;
-    private final RequestBody requestBody;
-    private BufferedSink bufferedSink;
+public class UploadBody extends RequestBody {
 
-    public MultipartProgressBody(RequestBody requestBody, UploadProgressListener uploadListener) {
+    private final RequestBody requestBody;
+    private final UploadProgressListener uploadListener;
+
+    public UploadBody(RequestBody requestBody, UploadProgressListener uploadListener) {
         this.requestBody = requestBody;
         this.uploadListener = uploadListener;
     }
@@ -32,17 +32,15 @@ public class MultipartProgressBody extends RequestBody {
 
     @Override
     public void writeTo(BufferedSink sink) throws IOException {
-        if (bufferedSink == null) {
-            bufferedSink = Okio.buffer(sink(sink));
-        }
+        BufferedSink bufferedSink = Okio.buffer(sink(sink));
         requestBody.writeTo(bufferedSink);
         bufferedSink.flush();
     }
 
     private Sink sink(Sink sink) {
         return new ForwardingSink(sink) {
-            long bytesWritten = 0L;
-            long contentLength = 0L;
+            private long contentLength = 0L;
+            private long bytesWritten = 0L;
 
             @Override
             public void write(Buffer source, long byteCount) throws IOException {

@@ -2,52 +2,46 @@ package httper;
 
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Objects;
 
 import okhttp3.FormBody;
 import okhttp3.Request;
 import okhttp3.RequestBody;
 
 public class PostRequest extends HttpRequest<PostRequest> {
+
+    private final Map<String, String> formData = new HashMap<>();
     private String jsonBody;
-    private Map<String, String> formData;
     private RequestBody customBody;
 
     public PostRequest(Httper httper) {
         super(httper);
-        if (params != null) {
-            this.formData = new HashMap<>(params);
+        if (httper.params != null) {
+            this.formData.putAll(httper.params);
         }
     }
 
     public PostRequest addFormData(String name, String value) {
-        if (this.formData == null) {
-            this.formData = new HashMap<>();
-        }
         this.formData.put(name, value);
         return this;
     }
 
     public PostRequest addFormData(Map<String, String> formData) {
-        if (this.formData == null) {
-            this.formData = new HashMap<>(formData);
-        } else {
-            this.formData.putAll(formData);
-        }
+        this.formData.putAll(formData);
         return this;
     }
 
     public PostRequest setJsonBody(Object json) {
-        this.jsonBody = Parser.getParserFactory().toJson(json);
-        return this;
+        return setJsonBody(Parser.getParserFactory().toJson(json));
     }
 
     public PostRequest setJsonBody(String jsonBody) {
+        if (jsonBody == null) throw new IllegalArgumentException("jsonBody == null");
         this.jsonBody = jsonBody;
         return this;
     }
 
     public PostRequest setCustomBody(RequestBody customBody) {
+        if (jsonBody == null) throw new IllegalArgumentException("customBody == null");
         this.customBody = customBody;
         return this;
     }
@@ -65,11 +59,11 @@ public class PostRequest extends HttpRequest<PostRequest> {
 
     @Override
     protected RequestBody generateRequestBody() {
-        RequestBody body = null;
-        if (formData != null) body = createFormRequestBody(formData);
+        RequestBody body;
         if (jsonBody != null) body = RequestBody.create(MEDIA_TYPE_JSON, jsonBody);
-        if (customBody != null) body = customBody;
-        return Objects.requireNonNull(body, "POST must have a request body.");
+        else if (customBody != null) body = customBody;
+        else body = createFormRequestBody(formData);
+        return body;
     }
 
     private FormBody createFormRequestBody(Map<String, String> map) {

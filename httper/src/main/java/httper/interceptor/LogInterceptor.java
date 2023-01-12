@@ -26,6 +26,7 @@ import okio.GzipSource;
 
 public class LogInterceptor implements Interceptor {
     private static final String TAG = "LogInterceptor";
+
     private volatile Set<String> headersToRedact = Collections.emptySet();
 
     private static boolean bodyHasUnknownEncoding(Headers headers) {
