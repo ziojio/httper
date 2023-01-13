@@ -27,9 +27,9 @@ import okhttp3.Response;
 @SuppressWarnings("unchecked")
 public abstract class HttpRequest<T> {
 
-    static final MediaType MEDIA_TYPE_JSON = MediaType.parse("application/json; charset=utf-8");
-    static final MediaType MEDIA_TYPE_STREAM = MediaType.parse("application/octet-stream");
-    static final MediaType MEDIA_TYPE_MARKDOWN = MediaType.parse("text/x-markdown; charset=utf-8");
+    public static final MediaType MEDIA_TYPE_JSON = MediaType.parse("application/json; charset=utf-8");
+    public static final MediaType MEDIA_TYPE_STREAM = MediaType.parse("application/octet-stream");
+    public static final MediaType MEDIA_TYPE_MARKDOWN = MediaType.parse("text/x-markdown; charset=utf-8");
 
     boolean debug;
     String baseUrl;
